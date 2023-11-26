@@ -1,0 +1,1376 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="45">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>134467</ID>
+      <Description>"PPSSPP scripts aob x64 (does not require exact version, but might fail) updated for ~v1.16.6-346+"</Description>
+      <Options moHideChildren="1"/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+
+function GetProcessNameFromId(processId)
+  local processName = nil
+  local list = createStringlist()
+  getProcesslist(list)
+  for i = 0, list.Count-1 do
+    local id, name = list.String[i]:match("(.*)-(.*)")
+    if processId == tonumber(id, 16) then
+      processName = name
+      break
+    end
+  end
+  return processName
+end
+
+function lua_aobscan(module,bytes,index)
+  index = index - 1
+  if(getModuleSize(module)) then
+      local memScanner = createMemScan()
+      local memFoundList = createFoundList(memScanner)
+      memScanner.firstScan(
+        soExactValue,vtByteArray,rtRounded,bytes,nil,
+        getAddress(module),(getAddress(module)+getModuleSize(module)),"",
+        fsmNotAligned,"",true,false,false,false)
+      memScanner.waitTillDone()
+      memFoundList.initialize()
+        if(memFoundList.Count == 0) then
+          AoB=nil
+          print("Failed, probably PPSSPP changed too much, try versions around 1.16.6.346+")
+        else
+          AoB=memFoundList.Address[index]
+        end
+      memScanner.destroy()
+      memFoundList.destroy()
+  end
+end
+
+
+function disableme(memoryrecord,before,currentstate)
+ if (AoB == nil or userMemory=="0000000008800000") then
+  memoryrecord_unfreeze(memoryrecord)
+ end
+ return true
+end
+
+
+function justdoit()
+  controlMainForm = getMainForm()
+  moduleName = GetProcessNameFromId(getOpenedProcessID())
+  AoB=nil
+  --AoB = AOBScan("48 89 44 24 28 8D 4A FA")
+  memoryrecordMain=getAddressList().getMemoryRecordByDescription("PPSSPP scripts aob x64 (does not require exact version, but might fail) updated for ~v1.16.6-346+")
+  if (moduleName) then
+     lua_aobscan(moduleName,"8D 4A FA 48 89 44 24 28",1)
+--   lua_aobscan(moduleName,"48 89 44 24 28 8D 4A FA",1)
+  else
+   print("Use first icon from the left at the top or script to attach CE to PPSSPP process or use Attach to PPSSPP script.")
+  end
+  if (AoB) then
+   --st = tonumber(AoB[0],16)
+   st = tonumber(AoB,16)
+   offset=readInteger(st-0x4)
+   pointer=st+offset
+   --print(string.format("%08X pointer",pointer),string.format("%08X offset",offset))
+   userMemory=string.format("%016X",readQword(pointer)+0x8800000)
+   --print(string.format("%08X user memory",pointer),userMemory)
+   if (userMemory=="0000000008800000") then
+    print("Run the game first.")
+   else
+    getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64_v16.6)").setAddress(userMemory)
+   end
+   --AoB.Destroy()
+  end
+  memoryrecord_onActivate(memoryrecordMain,disableme)
+end
+{$asm}
+
+luaCall(justdoit())
+[DISABLE]
+</AssemblerScript>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>134468</ID>
+          <Description>"PSP memory in CE(aob x64_v16.6)"</Description>
+          <VariableType>4 Bytes</VariableType>
+          <Address>000001DBE5740000</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>134469</ID>
+          <Description>"Limit Scan Range"</Description>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>{$lua}
+function setStartStop()
+  local controlMainForm = getMainForm()
+  local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64_v16.6)").getCurrentAddress()
+  local check = cheatEngineIs64Bit()
+  local check2 = targetIs64Bit()
+  if (check and check2) then
+   start = string.format("%016X",addr)
+   st = string.format("%016X",addr + 25165824)
+  else
+   start = string.format("%08X",addr)
+   st = string.format("%08X",addr + 25165824)
+  end
+  controlMainForm.FromAddress.setCaption(start)
+  controlMainForm.ToAddress.setCaption(st)
+end
+{$asm}
+[ENABLE]
+luaCall(setStartStop())
+[DISABLE]
+luaCall(setStartStop())
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>134470</ID>
+          <Description>"Limit Scan Range(for HD remasters &amp; some homebrew)"</Description>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>{$lua}
+function setStartStop()
+  local controlMainForm = getMainForm()
+  local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64_v16.6)").getCurrentAddress()
+  local check = cheatEngineIs64Bit()
+  local check2 = targetIs64Bit()
+  if (check and check2) then
+   start = string.format("%016X",addr)
+   st = string.format("%016X",addr + 58720256)
+  else
+   start = string.format("%08X",addr)
+   st = string.format("%08X",addr + 58720256)
+  end
+  controlMainForm.FromAddress.setCaption(start)
+  controlMainForm.ToAddress.setCaption(st)
+end
+{$asm}
+[ENABLE]
+luaCall(setStartStop())
+[DISABLE]
+luaCall(setStartStop())
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>134471</ID>
+          <Description>"Select cheat entry and click on the square left from this text to convert address"</Description>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>{$lua}
+function PrintCW()
+  selected = getAddressList().SelCount
+  if (selected &gt; 0) then
+   setable = getAddressList().getSelectedRecords().CurrentAddress
+   all = getAddressList().Count
+   j = 1
+   local addrtable = {}
+   for i = 0, all-1 do
+    local sel = getAddressList().MemoryRecord[i].Selected
+    local address = getAddressList().MemoryRecord[i].getCurrentAddress()
+    if (sel and address &gt; 0) then
+     print("")
+     addrtable[j] = adr1
+     local desc = getAddressList().MemoryRecord[i].getDescription()
+     local val = getAddressList().MemoryRecord[i].Value
+     local typ = getAddressList().MemoryRecord[i].Type
+     local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64nx)").getCurrentAddress()
+     local cwcheat = address - addr
+     local disassembly = cwcheat + 0x8800000
+     local check = cheatEngineIs64Bit()
+     local check2 = targetIs64Bit()
+     if (check and check2) then
+       print("CE:",string.format("%016X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     else
+       print("CE:",string.format("%08X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     end
+     print("_C0 "..desc)
+     local hex = getAddressList().MemoryRecord[i].ShowAsHex
+     if (hex==false) then
+      if (typ == 0) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       local s=string.pack("f",val)
+       local f=string.unpack("i4",s)
+       val = string.format("%08X",f)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     else
+      if (typ == 0) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     end
+     if (typ == 3 or typ &gt; 4) then
+       print("Type unsupported")
+     else
+       print("_L 0x"..cwcheat,"0x"..val)
+     end
+     j=j+1
+    end
+   end
+  else
+   print("Select cheat entry first!")
+  end
+end
+{$asm}
+[ENABLE]
+luaCall(PrintCW())
+
+[DISABLE]
+luaCall(PrintCW())
+</AssemblerScript>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>134459</ID>
+      <Description>"Attach to PPSSPP"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{$lua}
+function checkProcessList()
+    slStringList=createStringlist()
+    processList=createStringlist()
+    slHexList=createStringlist()
+    getProcesslist(processList)
+    slStringID=strings_getCount(processList)
+    for y=0,slStringID-1 do
+       slHexID=nil
+       slStringID=strings_getString(processList, y)
+       slHexID=string.find(slStringID, "PPSSPPWindows")
+       if slHexID~=nil then strings_add(slStringList, slStringID); end
+    end
+    slStringID=strings_getCount(slStringList)
+    if slStringID&lt;1 then
+       print("Failed to detect PPSSPPWindows process.")
+    else
+       if slStringID&gt;1 then
+        print("Warning: you had more than one PPSSPPWindows process opened, attaching to the first one.")
+       end
+       for y=0,slStringID-1 do
+           slHexID=nil
+           slStringID=strings_getString(slStringList, y)
+           slHexID=string.sub(slStringID, string.find(slStringID, "%x%x%x%x%x%x%x%x"))
+           if slHexID~=nil then  strings_add(slHexList, slHexID); end
+           slHexID=strings_getCount(slHexList)
+       end
+       Mooo=strings_getString(slHexList, 0)
+       Moo=tonumber(Mooo,16)
+    end
+end
+function attach()
+ checkProcessList()
+ openProcess(Moo)
+end
+{$asm}
+luaCall(attach())
+[ENABLE]
+[DISABLE]
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>134474</ID>
+      <Description>"Win 10 bug workaround(activate before anything else) avoids "???" on value change"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{$lua}
+function bugworkaround()
+openProcess([[cheatengine-x86_64.exe]])
+reinitializeSymbolhandler()
+
+autoAssemble([[
+alloc(NewVirtualProtectEx,256)
+alloc(OriginalVirtualProtectEx, 8)
+registersymbol(NewVirtualProtectEx)
+registersymbol(OriginalVirtualProtectEx)
+label(notself)
+NewVirtualProtectEx:
+cmp ecx,ffffffff
+jne short notself
+
+
+call [OriginalVirtualProtectEx]
+
+ret
+
+notself:
+xor rax,rax
+ret
+
+]])
+
+s=generateAPIHookScript("VirtualProtectEx", "NewVirtualProtectEx", "OriginalVirtualProtectEx")
+
+--stupid bug in generateAPIHookScript forgets the alloc originalcall0
+s=[[alloc(originalcall0, 64, VirtualProtectEx)
+]]..s
+
+autoAssemble(s)
+end
+{$asm}
+luaCall(bugworkaround())
+[ENABLE]
+[DISABLE]
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>134475</ID>
+      <Description>"(for CE SSE4_AVX2) Win 10 bug workaround(activate before anything else) avoids "???" on value change"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{$lua}
+function bugworkaround()
+openProcess([[cheatengine-x86_64-SSE4-AVX2.exe]])
+reinitializeSymbolhandler()
+
+autoAssemble([[
+alloc(NewVirtualProtectEx,256)
+alloc(OriginalVirtualProtectEx, 8)
+registersymbol(NewVirtualProtectEx)
+registersymbol(OriginalVirtualProtectEx)
+label(notself)
+NewVirtualProtectEx:
+cmp ecx,ffffffff
+jne short notself
+
+
+call [OriginalVirtualProtectEx]
+
+ret
+
+notself:
+xor rax,rax
+ret
+
+]])
+
+s=generateAPIHookScript("VirtualProtectEx", "NewVirtualProtectEx", "OriginalVirtualProtectEx")
+
+--stupid bug in generateAPIHookScript forgets the alloc originalcall0
+s=[[alloc(originalcall0, 64, VirtualProtectEx)
+]]..s
+
+autoAssemble(s)
+end
+{$asm}
+luaCall(bugworkaround())
+[ENABLE]
+[DISABLE]
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>134472</ID>
+      <Description>"Hide CE scan UI (just for visibility with lots of entries)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+function killui()
+  control_setVisible(wincontrol_getControl(getMainForm(),3), false)
+end
+{$asm}
+luaCall(killui())
+[DISABLE]
+{$lua}
+function restoreui()
+  control_setVisible(wincontrol_getControl(getMainForm(),3), true)
+end
+{$asm}
+luaCall(restoreui())
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>134473</ID>
+      <Description>"Legacy"</Description>
+      <Options moHideChildren="1"/>
+      <GroupHeader>1</GroupHeader>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>134417</ID>
+          <Description>"PPSSPP scripts (v1.2.2 x86)"</Description>
+          <Options moHideChildren="1"/>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+registersymbol(basePointer)
+label(basePointer)
+
+[PPSSPPWindows.exe+BF1E5C]+800000:
+basePointer:
+
+[DISABLE]
+unregistersymbol(basePointer)
+</AssemblerScript>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>134415</ID>
+              <Description>"PSP memory in CE"</Description>
+              <VariableType>4 Bytes</VariableType>
+              <Address>basePointer</Address>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134424</ID>
+              <Description>"Limit Scan Range"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function setStartStop()
+  local controlMainForm = getMainForm()
+  local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE").getCurrentAddress()
+  local check = cheatEngineIs64Bit()
+  local check2 = targetIs64Bit()
+  if (check and check2) then
+   start = string.format("%016X",addr)
+   st = string.format("%016X",addr + 25165824)
+  else
+   start = string.format("%08X",addr)
+   st = string.format("%08X",addr + 25165824)
+  end
+  controlMainForm.FromAddress.setCaption(start)
+  controlMainForm.ToAddress.setCaption(st)
+end
+{$asm}
+[ENABLE]
+luaCall(setStartStop())
+[DISABLE]
+luaCall(setStartStop())
+</AssemblerScript>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134457</ID>
+              <Description>"Select cheat entry and click on the square left from this text to convert address"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function PrintCW()
+  selected = getAddressList().SelCount
+  if (selected &gt; 0) then
+   setable = getAddressList().getSelectedRecords().CurrentAddress
+   all = getAddressList().Count
+   j = 1
+   local addrtable = {}
+   for i = 0, all-1 do
+    local sel = getAddressList().MemoryRecord[i].Selected
+    local address = getAddressList().MemoryRecord[i].getCurrentAddress()
+    if (sel and address &gt; 0) then
+     print("")
+     addrtable[j] = adr1
+     local desc = getAddressList().MemoryRecord[i].getDescription()
+     local val = getAddressList().MemoryRecord[i].Value
+     local typ = getAddressList().MemoryRecord[i].Type
+     local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64)").getCurrentAddress()
+     local cwcheat = address - addr
+     local disassembly = cwcheat + 0x8800000
+     local check = cheatEngineIs64Bit()
+     local check2 = targetIs64Bit()
+     if (check and check2) then
+       print("CE:",string.format("%016X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     else
+       print("CE:",string.format("%08X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     end
+     print("_C0 "..desc)
+     local hex = getAddressList().MemoryRecord[i].ShowAsHex
+     if (hex==false) then
+      if (typ == 0) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       local s=string.pack("f",val)
+       local f=string.unpack("i4",s)
+       val = string.format("%08X",f)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     else
+      if (typ == 0) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     end
+     if (typ == 3 or typ &gt; 4) then
+       print("Type unsupported")
+     else
+       print("_L 0x"..cwcheat,"0x"..val)
+     end
+     j=j+1
+    end
+   end
+  else
+   print("Select cheat entry first!")
+  end
+end
+{$asm}
+[ENABLE]
+luaCall(PrintCW())
+
+[DISABLE]
+luaCall(PrintCW())
+</AssemblerScript>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>134433</ID>
+          <Description>"PPSSPP scripts (v1.2.2 x64)"</Description>
+          <Options moHideChildren="1"/>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+registersymbol(basePointer)
+label(basePointer)
+
+[PPSSPPWindows64.exe+DE0380]+800000:
+basePointer:
+
+[DISABLE]
+unregistersymbol(basePointer)
+</AssemblerScript>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>134434</ID>
+              <Description>"PSP memory in CE x64"</Description>
+              <VariableType>4 Bytes</VariableType>
+              <Address>basePointer</Address>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134435</ID>
+              <Description>"Limit Scan Range"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function setStartStop()
+  local controlMainForm = getMainForm()
+  local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE x64").getCurrentAddress()
+  local check = cheatEngineIs64Bit()
+  local check2 = targetIs64Bit()
+  if (check and check2) then
+   start = string.format("%016X",addr)
+   st = string.format("%016X",addr + 25165824)
+  else
+   start = string.format("%08X",addr)
+   st = string.format("%08X",addr + 25165824)
+  end
+  controlMainForm.FromAddress.setCaption(start)
+  controlMainForm.ToAddress.setCaption(st)
+end
+{$asm}
+[ENABLE]
+luaCall(setStartStop())
+[DISABLE]
+luaCall(setStartStop())
+</AssemblerScript>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134458</ID>
+              <Description>"Select cheat entry and click on the square left from this text to convert address"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function PrintCW()
+  selected = getAddressList().SelCount
+  if (selected &gt; 0) then
+   setable = getAddressList().getSelectedRecords().CurrentAddress
+   all = getAddressList().Count
+   j = 1
+   local addrtable = {}
+   for i = 0, all-1 do
+    local sel = getAddressList().MemoryRecord[i].Selected
+    local address = getAddressList().MemoryRecord[i].getCurrentAddress()
+    if (sel and address &gt; 0) then
+     print("")
+     addrtable[j] = adr1
+     local desc = getAddressList().MemoryRecord[i].getDescription()
+     local val = getAddressList().MemoryRecord[i].Value
+     local typ = getAddressList().MemoryRecord[i].Type
+     local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64)").getCurrentAddress()
+     local cwcheat = address - addr
+     local disassembly = cwcheat + 0x8800000
+     local check = cheatEngineIs64Bit()
+     local check2 = targetIs64Bit()
+     if (check and check2) then
+       print("CE:",string.format("%016X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     else
+       print("CE:",string.format("%08X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     end
+     print("_C0 "..desc)
+     local hex = getAddressList().MemoryRecord[i].ShowAsHex
+     if (hex==false) then
+      if (typ == 0) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       local s=string.pack("f",val)
+       local f=string.unpack("i4",s)
+       val = string.format("%08X",f)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     else
+      if (typ == 0) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     end
+     if (typ == 3 or typ &gt; 4) then
+       print("Type unsupported")
+     else
+       print("_L 0x"..cwcheat,"0x"..val)
+     end
+     j=j+1
+    end
+   end
+  else
+   print("Select cheat entry first!")
+  end
+end
+{$asm}
+[ENABLE]
+luaCall(PrintCW())
+
+[DISABLE]
+luaCall(PrintCW())
+</AssemblerScript>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>134449</ID>
+          <Description>"PPSSPP scripts aob x64 (does not require exact version, but might fail)"</Description>
+          <Options moHideChildren="1"/>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+{$lua}
+
+function GetProcessNameFromId(processId)
+  local processName = nil
+  local list = createStringlist()
+  getProcesslist(list)
+  for i = 0, list.Count-1 do
+    local id, name = list.String[i]:match("(.*)-(.*)")
+    if processId == tonumber(id, 16) then
+      processName = name
+      break
+    end
+  end
+  return processName
+end
+
+function lua_aobscan(module,bytes,index)
+  index = index - 1
+  if(getModuleSize(module)) then
+      local memScanner = createMemScan()
+      local memFoundList = createFoundList(memScanner)
+      memScanner.firstScan(
+        soExactValue,vtByteArray,rtRounded,bytes,nil,
+        getAddress(module),(getAddress(module)+getModuleSize(module)),"",
+        fsmNotAligned,"",true,false,false,false)
+      memScanner.waitTillDone()
+      memFoundList.initialize()
+        if(memFoundList.Count == 0) then
+          AoB=nil
+          print("Failed, probably PPSSPP changed too much, try versions around 1.2.2+")
+        else
+          AoB=memFoundList.Address[index]
+        end
+      memScanner.destroy()
+      memFoundList.destroy()
+  end
+end
+
+
+function disableme(memoryrecord,before,currentstate)
+ if (AoB == nil or userMemory=="0000000000800000") then
+  memoryrecord_unfreeze(memoryrecord)
+ end
+ return true
+end
+
+
+function justdoit()
+  controlMainForm = getMainForm()
+  moduleName = GetProcessNameFromId(getOpenedProcessID())
+  AoB=nil
+  --AoB = AOBScan("48 89 44 24 28 8D 4A ED")
+  memoryrecordMain=getAddressList().getMemoryRecordByDescription("PPSSPP scripts aob x64 (does not require exact version, but might fail)")
+  if (moduleName) then
+   lua_aobscan(moduleName,"48 89 44 24 28 8D 4A ED",1)
+  else
+   print("Use first icon from the left at the top or script to attach CE to PPSSPP process.")
+  end
+  if (AoB) then
+   --st = tonumber(AoB[0],16)
+   st = tonumber(AoB,16)
+   offset=readInteger(st-0x4)
+   pointer=st+offset
+   userMemory=string.format("%016X",readQword(pointer)+0x800000)
+   --print(string.format("%08X",pointer),userMemory)
+   if (userMemory=="0000000000800000") then
+    print("Run the game first.")
+   else
+    getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64)").setAddress(userMemory)
+   end
+   --AoB.Destroy()
+  end
+  memoryrecord_onActivate(memoryrecordMain,disableme)
+end
+{$asm}
+
+luaCall(justdoit())
+[DISABLE]
+</AssemblerScript>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>134450</ID>
+              <Description>"PSP memory in CE(aob x64)"</Description>
+              <VariableType>4 Bytes</VariableType>
+              <Address>0000000149AC0000</Address>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134451</ID>
+              <Description>"Limit Scan Range"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function setStartStop()
+  local controlMainForm = getMainForm()
+  local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64)").getCurrentAddress()
+  local check = cheatEngineIs64Bit()
+  local check2 = targetIs64Bit()
+  if (check and check2) then
+   start = string.format("%016X",addr)
+   st = string.format("%016X",addr + 25165824)
+  else
+   start = string.format("%08X",addr)
+   st = string.format("%08X",addr + 25165824)
+  end
+  controlMainForm.FromAddress.setCaption(start)
+  controlMainForm.ToAddress.setCaption(st)
+end
+{$asm}
+[ENABLE]
+luaCall(setStartStop())
+[DISABLE]
+luaCall(setStartStop())
+</AssemblerScript>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134452</ID>
+              <Description>"Select cheat entry and click on the square left from this text to convert address"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function PrintCW()
+  selected = getAddressList().SelCount
+  if (selected &gt; 0) then
+   setable = getAddressList().getSelectedRecords().CurrentAddress
+   all = getAddressList().Count
+   j = 1
+   local addrtable = {}
+   for i = 0, all-1 do
+    local sel = getAddressList().MemoryRecord[i].Selected
+    local address = getAddressList().MemoryRecord[i].getCurrentAddress()
+    if (sel and address &gt; 0) then
+     print("")
+     addrtable[j] = adr1
+     local desc = getAddressList().MemoryRecord[i].getDescription()
+     local val = getAddressList().MemoryRecord[i].Value
+     local typ = getAddressList().MemoryRecord[i].Type
+     local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64)").getCurrentAddress()
+     local cwcheat = address - addr
+     local disassembly = cwcheat + 0x8800000
+     local check = cheatEngineIs64Bit()
+     local check2 = targetIs64Bit()
+     if (check and check2) then
+       print("CE:",string.format("%016X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     else
+       print("CE:",string.format("%08X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     end
+     print("_C0 "..desc)
+     local hex = getAddressList().MemoryRecord[i].ShowAsHex
+     if (hex==false) then
+      if (typ == 0) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       local s=string.pack("f",val)
+       local f=string.unpack("i4",s)
+       val = string.format("%08X",f)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     else
+      if (typ == 0) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     end
+     if (typ == 3 or typ &gt; 4) then
+       print("Type unsupported")
+     else
+       print("_L 0x"..cwcheat,"0x"..val)
+     end
+     j=j+1
+    end
+   end
+  else
+   print("Select cheat entry first!")
+  end
+end
+{$asm}
+[ENABLE]
+luaCall(PrintCW())
+
+[DISABLE]
+luaCall(PrintCW())
+</AssemblerScript>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>134460</ID>
+          <Description>"PPSSPP scripts aob x64 (does not require exact version, but might fail) updated for ~v1.3-400+"</Description>
+          <Options moHideChildren="1"/>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+{$lua}
+
+function GetProcessNameFromId(processId)
+  local processName = nil
+  local list = createStringlist()
+  getProcesslist(list)
+  for i = 0, list.Count-1 do
+    local id, name = list.String[i]:match("(.*)-(.*)")
+    if processId == tonumber(id, 16) then
+      processName = name
+      break
+    end
+  end
+  return processName
+end
+
+function lua_aobscan(module,bytes,index)
+  index = index - 1
+  if(getModuleSize(module)) then
+      local memScanner = createMemScan()
+      local memFoundList = createFoundList(memScanner)
+      memScanner.firstScan(
+        soExactValue,vtByteArray,rtRounded,bytes,nil,
+        getAddress(module),(getAddress(module)+getModuleSize(module)),"",
+        fsmNotAligned,"",true,false,false,false)
+      memScanner.waitTillDone()
+      memFoundList.initialize()
+        if(memFoundList.Count == 0) then
+          AoB=nil
+          print("Failed, probably PPSSPP changed too much, try versions around 1.2.2+")
+        else
+          AoB=memFoundList.Address[index]
+        end
+      memScanner.destroy()
+      memFoundList.destroy()
+  end
+end
+
+
+function disableme(memoryrecord,before,currentstate)
+ if (AoB == nil or userMemory=="0000000000800000") then
+  memoryrecord_unfreeze(memoryrecord)
+ end
+ return true
+end
+
+
+function justdoit()
+  controlMainForm = getMainForm()
+  moduleName = GetProcessNameFromId(getOpenedProcessID())
+  AoB=nil
+  --AoB = AOBScan("48 89 44 24 28 8D 4A ED")
+  memoryrecordMain=getAddressList().getMemoryRecordByDescription("PPSSPP scripts aob x64 (does not require exact version, but might fail) updated for ~v1.3-400+")
+  if (moduleName) then
+   lua_aobscan(moduleName,"48 89 44 24 28 8D 4A ED",1)
+  else
+   print("Use first icon from the left at the top or script to attach CE to PPSSPP process.")
+  end
+  if (AoB) then
+   --st = tonumber(AoB[0],16)
+   st = tonumber(AoB,16)
+   offset=readInteger(st-0x4)
+   pointer=st+offset+0x8
+   --add 0x8 in new ppsspp
+   userMemory=string.format("%016X",readQword(pointer)+0x800000)
+   --print(string.format("%08X",pointer),userMemory)
+   if (userMemory=="0000000000800000") then
+    print("Run the game first.")
+   else
+    getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64n)").setAddress(userMemory)
+   end
+   --AoB.Destroy()
+  end
+  memoryrecord_onActivate(memoryrecordMain,disableme)
+end
+{$asm}
+
+luaCall(justdoit())
+[DISABLE]
+</AssemblerScript>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>134461</ID>
+              <Description>"PSP memory in CE(aob x64n)"</Description>
+              <VariableType>4 Bytes</VariableType>
+              <Address>0000000148F60000</Address>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134462</ID>
+              <Description>"Limit Scan Range"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function setStartStop()
+  local controlMainForm = getMainForm()
+  local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64n)").getCurrentAddress()
+  local check = cheatEngineIs64Bit()
+  local check2 = targetIs64Bit()
+  if (check and check2) then
+   start = string.format("%016X",addr)
+   st = string.format("%016X",addr + 25165824)
+  else
+   start = string.format("%08X",addr)
+   st = string.format("%08X",addr + 25165824)
+  end
+  controlMainForm.FromAddress.setCaption(start)
+  controlMainForm.ToAddress.setCaption(st)
+end
+{$asm}
+[ENABLE]
+luaCall(setStartStop())
+[DISABLE]
+luaCall(setStartStop())
+</AssemblerScript>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134465</ID>
+              <Description>"Limit Scan Range(for HD remasters &amp; some homebrew)"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function setStartStop()
+  local controlMainForm = getMainForm()
+  local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64n)").getCurrentAddress()
+  local check = cheatEngineIs64Bit()
+  local check2 = targetIs64Bit()
+  if (check and check2) then
+   start = string.format("%016X",addr)
+   st = string.format("%016X",addr + 58720256)
+  else
+   start = string.format("%08X",addr)
+   st = string.format("%08X",addr + 58720256)
+  end
+  controlMainForm.FromAddress.setCaption(start)
+  controlMainForm.ToAddress.setCaption(st)
+end
+{$asm}
+[ENABLE]
+luaCall(setStartStop())
+[DISABLE]
+luaCall(setStartStop())
+</AssemblerScript>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134463</ID>
+              <Description>"Select cheat entry and click on the square left from this text to convert address"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function PrintCW()
+  selected = getAddressList().SelCount
+  if (selected &gt; 0) then
+   setable = getAddressList().getSelectedRecords().CurrentAddress
+   all = getAddressList().Count
+   j = 1
+   local addrtable = {}
+   for i = 0, all-1 do
+    local sel = getAddressList().MemoryRecord[i].Selected
+    local address = getAddressList().MemoryRecord[i].getCurrentAddress()
+    if (sel and address &gt; 0) then
+     print("")
+     addrtable[j] = adr1
+     local desc = getAddressList().MemoryRecord[i].getDescription()
+     local val = getAddressList().MemoryRecord[i].Value
+     local typ = getAddressList().MemoryRecord[i].Type
+     local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64n)").getCurrentAddress()
+     local cwcheat = address - addr
+     local disassembly = cwcheat + 0x8800000
+     local check = cheatEngineIs64Bit()
+     local check2 = targetIs64Bit()
+     if (check and check2) then
+       print("CE:",string.format("%016X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     else
+       print("CE:",string.format("%08X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     end
+     print("_C0 "..desc)
+     local hex = getAddressList().MemoryRecord[i].ShowAsHex
+     if (hex==false) then
+      if (typ == 0) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       local s=string.pack("f",val)
+       local f=string.unpack("i4",s)
+       val = string.format("%08X",f)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     else
+      if (typ == 0) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     end
+     if (typ == 3 or typ &gt; 4) then
+       print("Type unsupported")
+     else
+       print("_L 0x"..cwcheat,"0x"..val)
+     end
+     j=j+1
+    end
+   end
+  else
+   print("Select cheat entry first!")
+  end
+end
+{$asm}
+[ENABLE]
+luaCall(PrintCW())
+
+[DISABLE]
+luaCall(PrintCW())
+</AssemblerScript>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>134476</ID>
+          <Description>"PPSSPP scripts aob x64 (does not require exact version, but might fail) updated for ~v1.3-900+"</Description>
+          <Options moHideChildren="1"/>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+{$lua}
+
+function GetProcessNameFromId(processId)
+  local processName = nil
+  local list = createStringlist()
+  getProcesslist(list)
+  for i = 0, list.Count-1 do
+    local id, name = list.String[i]:match("(.*)-(.*)")
+    if processId == tonumber(id, 16) then
+      processName = name
+      break
+    end
+  end
+  return processName
+end
+
+function lua_aobscan(module,bytes,index)
+  index = index - 1
+  if(getModuleSize(module)) then
+      local memScanner = createMemScan()
+      local memFoundList = createFoundList(memScanner)
+      memScanner.firstScan(
+        soExactValue,vtByteArray,rtRounded,bytes,nil,
+        getAddress(module),(getAddress(module)+getModuleSize(module)),"",
+        fsmNotAligned,"",true,false,false,false)
+      memScanner.waitTillDone()
+      memFoundList.initialize()
+        if(memFoundList.Count == 0) then
+          AoB=nil
+          print("Failed, probably PPSSPP changed too much, try versions around 1.3-900+")
+        else
+          AoB=memFoundList.Address[index]
+        end
+      memScanner.destroy()
+      memFoundList.destroy()
+  end
+end
+
+
+function disableme(memoryrecord,before,currentstate)
+ if (AoB == nil or userMemory=="0000000000800000") then
+  memoryrecord_unfreeze(memoryrecord)
+ end
+ return true
+end
+
+
+function justdoit()
+  controlMainForm = getMainForm()
+  moduleName = GetProcessNameFromId(getOpenedProcessID())
+  AoB=nil
+  --AoB = AOBScan("48 89 44 24 28 8D 4A FA")
+  memoryrecordMain=getAddressList().getMemoryRecordByDescription("PPSSPP scripts aob x64 (does not require exact version, but might fail) updated for ~v1.3-900+")
+  if (moduleName) then
+   lua_aobscan(moduleName,"48 89 44 24 28 8D 4A FA",1)
+  else
+   print("Use first icon from the left at the top or script to attach CE to PPSSPP process.")
+  end
+  if (AoB) then
+   --st = tonumber(AoB[0],16)
+   st = tonumber(AoB,16)
+   offset=readInteger(st-0x4)
+   pointer=st+offset+0x8
+   --add 0x8 in new ppsspp
+   userMemory=string.format("%016X",readQword(pointer)+0x800000)
+   --print(string.format("%08X",pointer),userMemory)
+   if (userMemory=="0000000000800000") then
+    print("Run the game first.")
+   else
+    getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64nx)").setAddress(userMemory)
+   end
+   --AoB.Destroy()
+  end
+  memoryrecord_onActivate(memoryrecordMain,disableme)
+end
+{$asm}
+
+luaCall(justdoit())
+[DISABLE]
+</AssemblerScript>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>134477</ID>
+              <Description>"PSP memory in CE(aob x64nx)"</Description>
+              <VariableType>4 Bytes</VariableType>
+              <Address>000002877AF40000</Address>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134478</ID>
+              <Description>"Limit Scan Range"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function setStartStop()
+  local controlMainForm = getMainForm()
+  local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64nx)").getCurrentAddress()
+  local check = cheatEngineIs64Bit()
+  local check2 = targetIs64Bit()
+  if (check and check2) then
+   start = string.format("%016X",addr)
+   st = string.format("%016X",addr + 25165824)
+  else
+   start = string.format("%08X",addr)
+   st = string.format("%08X",addr + 25165824)
+  end
+  controlMainForm.FromAddress.setCaption(start)
+  controlMainForm.ToAddress.setCaption(st)
+end
+{$asm}
+[ENABLE]
+luaCall(setStartStop())
+[DISABLE]
+luaCall(setStartStop())
+</AssemblerScript>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134479</ID>
+              <Description>"Limit Scan Range(for HD remasters &amp; some homebrew)"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function setStartStop()
+  local controlMainForm = getMainForm()
+  local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64nx)").getCurrentAddress()
+  local check = cheatEngineIs64Bit()
+  local check2 = targetIs64Bit()
+  if (check and check2) then
+   start = string.format("%016X",addr)
+   st = string.format("%016X",addr + 58720256)
+  else
+   start = string.format("%08X",addr)
+   st = string.format("%08X",addr + 58720256)
+  end
+  controlMainForm.FromAddress.setCaption(start)
+  controlMainForm.ToAddress.setCaption(st)
+end
+{$asm}
+[ENABLE]
+luaCall(setStartStop())
+[DISABLE]
+luaCall(setStartStop())
+</AssemblerScript>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>134480</ID>
+              <Description>"Select cheat entry and click on the square left from this text to convert address"</Description>
+              <VariableType>Auto Assembler Script</VariableType>
+              <AssemblerScript>{$lua}
+function PrintCW()
+  selected = getAddressList().SelCount
+  if (selected &gt; 0) then
+   setable = getAddressList().getSelectedRecords().CurrentAddress
+   all = getAddressList().Count
+   j = 1
+   local addrtable = {}
+   for i = 0, all-1 do
+    local sel = getAddressList().MemoryRecord[i].Selected
+    local address = getAddressList().MemoryRecord[i].getCurrentAddress()
+    if (sel and address &gt; 0) then
+     print("")
+     addrtable[j] = adr1
+     local desc = getAddressList().MemoryRecord[i].getDescription()
+     local val = getAddressList().MemoryRecord[i].Value
+     local typ = getAddressList().MemoryRecord[i].Type
+     local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64nx)").getCurrentAddress()
+     local cwcheat = address - addr
+     local disassembly = cwcheat + 0x8800000
+     local check = cheatEngineIs64Bit()
+     local check2 = targetIs64Bit()
+     if (check and check2) then
+       print("CE:",string.format("%016X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     else
+       print("CE:",string.format("%08X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     end
+     print("_C0 "..desc)
+     local hex = getAddressList().MemoryRecord[i].ShowAsHex
+     if (hex==false) then
+      if (typ == 0) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       local s=string.pack("f",val)
+       local f=string.unpack("i4",s)
+       val = string.format("%08X",f)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     else
+      if (typ == 0) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     end
+     if (typ == 3 or typ &gt; 4) then
+       print("Type unsupported")
+     else
+       print("_L 0x"..cwcheat,"0x"..val)
+     end
+     j=j+1
+    end
+   end
+  else
+   print("Select cheat entry first!")
+  end
+end
+{$asm}
+[ENABLE]
+luaCall(PrintCW())
+
+[DISABLE]
+luaCall(PrintCW())
+</AssemblerScript>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>134438</ID>
+      <Description>"Note: Make sure you have "MEM_MAPPED" selected in edit-&gt;settings-&gt;scan settings"</Description>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols>
+    <SymbolEntry>
+      <Name>AoB</Name>
+      <Address>000001C0</Address>
+    </SymbolEntry>
+  </UserdefinedSymbols>
+</CheatTable>
