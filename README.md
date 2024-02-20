@@ -1,5 +1,5 @@
 # Cheat table for PPSSPP
-## Updated on 1.16.6-346 
+## Updated on 1.16.6-346 (now fully, previous version I forgot about updating conversion script)
  x64 version required for AOB script, through there's an x86 version for 1.2.2 release under the legacy scripts.<br><br>
 
  This cheat table doesn't include any cheats, it was made to automatize the process of creating simple cheats and calculating addresses for PPSSPP's disassembly to make it easier start for creating more advanced cheats.<br><br>
