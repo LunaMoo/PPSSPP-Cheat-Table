@@ -93,7 +93,7 @@ luaCall(justdoit())
           <ID>134468</ID>
           <Description>"PSP memory in CE(aob x64_v16.6)"</Description>
           <VariableType>4 Bytes</VariableType>
-          <Address>000001DBE5740000</Address>
+          <Address>000001CF4AF00000</Address>
         </CheatEntry>
         <CheatEntry>
           <ID>134469</ID>
@@ -170,7 +170,7 @@ function PrintCW()
      local desc = getAddressList().MemoryRecord[i].getDescription()
      local val = getAddressList().MemoryRecord[i].Value
      local typ = getAddressList().MemoryRecord[i].Type
-     local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64nx)").getCurrentAddress()
+     local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64_v16.6)").getCurrentAddress()
      local cwcheat = address - addr
      local disassembly = cwcheat + 0x8800000
      local check = cheatEngineIs64Bit()
