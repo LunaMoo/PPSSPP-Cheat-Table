@@ -92,8 +92,9 @@ luaCall(justdoit())
         <CheatEntry>
           <ID>134468</ID>
           <Description>"PSP memory in CE(aob x64_v16.6)"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
           <VariableType>4 Bytes</VariableType>
-          <Address>000001CF4AF00000</Address>
+          <Address>0000000000000000</Address>
         </CheatEntry>
         <CheatEntry>
           <ID>134469</ID>
@@ -173,6 +174,163 @@ function PrintCW()
      local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(aob x64_v16.6)").getCurrentAddress()
      local cwcheat = address - addr
      local disassembly = cwcheat + 0x8800000
+     local check = cheatEngineIs64Bit()
+     local check2 = targetIs64Bit()
+     if (check and check2) then
+       print("CE:",string.format("%016X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     else
+       print("CE:",string.format("%08X",address)..", CWC:",string.format("%08X",cwcheat)..", Dissassembly:",string.format("%08X",disassembly)..", simple CWCheat:")
+     end
+     print("_C0 "..desc)
+     local hex = getAddressList().MemoryRecord[i].ShowAsHex
+     if (hex==false) then
+      if (typ == 0) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       val = string.format("%08X",val)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       local s=string.pack("f",val)
+       local f=string.unpack("i4",s)
+       val = string.format("%08X",f)
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     else
+      if (typ == 0) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat)
+      end
+      if (typ == 1) then
+       val = string.format("%08X",tonumber(val,16))
+       cwcheat = string.format("%08X",cwcheat+0x10000000)
+      end
+      if (typ == 2) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+      if (typ == 4) then
+       cwcheat = string.format("%08X",cwcheat+0x20000000)
+      end
+     end
+     if (typ == 3 or typ &gt; 4) then
+       print("Type unsupported")
+     else
+       print("_L 0x"..cwcheat,"0x"..val)
+     end
+     j=j+1
+    end
+   end
+  else
+   print("Select cheat entry first!")
+  end
+end
+{$asm}
+[ENABLE]
+luaCall(PrintCW())
+
+[DISABLE]
+luaCall(PrintCW())
+</AssemblerScript>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>134481</ID>
+      <Description>"Manual Mode (independent from version, but requires pasting PSP memory base address manually into it's address field below)"</Description>
+      <Options moHideChildren="1"/>
+      <GroupHeader>1</GroupHeader>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>134482</ID>
+          <Description>"PSP memory in CE(manual) - replace the address in here:"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>0000000000000000</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>134483</ID>
+          <Description>"Limit Scan Range"</Description>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>{$lua}
+function setStartStop()
+  local controlMainForm = getMainForm()
+  local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(manual) - replace the address in here:").getCurrentAddress()
+  local check = cheatEngineIs64Bit()
+  local check2 = targetIs64Bit()
+  if (check and check2) then
+   start = string.format("%016X",addr + 0x8800000)
+   st = string.format("%016X",addr + 0x8800000 + 25165824)
+  else
+   start = string.format("%08X",addr + 0x8800000)
+   st = string.format("%08X",addr + 0x8800000 + 25165824)
+  end
+  controlMainForm.FromAddress.setCaption(start)
+  controlMainForm.ToAddress.setCaption(st)
+end
+{$asm}
+[ENABLE]
+luaCall(setStartStop())
+[DISABLE]
+luaCall(setStartStop())
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>134484</ID>
+          <Description>"Limit Scan Range(for HD remasters &amp; some homebrew)"</Description>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>{$lua}
+function setStartStop()
+  local controlMainForm = getMainForm()
+  local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(manual) - replace the address in here:").getCurrentAddress()
+  local check = cheatEngineIs64Bit()
+  local check2 = targetIs64Bit()
+  if (check and check2) then
+   start = string.format("%016X",addr + 0x8800000)
+   st = string.format("%016X",addr + 0x8800000 + 58720256)
+  else
+   start = string.format("%08X",addr + 0x8800000)
+   st = string.format("%08X",addr + 0x8800000 + 58720256)
+  end
+  controlMainForm.FromAddress.setCaption(start)
+  controlMainForm.ToAddress.setCaption(st)
+end
+{$asm}
+[ENABLE]
+luaCall(setStartStop())
+[DISABLE]
+luaCall(setStartStop())
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>134485</ID>
+          <Description>"Select cheat entry and click on the square left from this text to convert address"</Description>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>{$lua}
+function PrintCW()
+  selected = getAddressList().SelCount
+  if (selected &gt; 0) then
+   setable = getAddressList().getSelectedRecords().CurrentAddress
+   all = getAddressList().Count
+   j = 1
+   local addrtable = {}
+   for i = 0, all-1 do
+    local sel = getAddressList().MemoryRecord[i].Selected
+    local address = getAddressList().MemoryRecord[i].getCurrentAddress()
+    if (sel and address &gt; 0) then
+     print("")
+     addrtable[j] = adr1
+     local desc = getAddressList().MemoryRecord[i].getDescription()
+     local val = getAddressList().MemoryRecord[i].Value
+     local typ = getAddressList().MemoryRecord[i].Type
+     local addr = getAddressList().getMemoryRecordByDescription("PSP memory in CE(manual) - replace the address in here:").getCurrentAddress()
+     local disassembly = address - addr
+     local cwcheat = disassembly + 0x8800000
      local check = cheatEngineIs64Bit()
      local check2 = targetIs64Bit()
      if (check and check2) then

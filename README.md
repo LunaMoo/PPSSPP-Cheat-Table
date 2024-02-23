@@ -1,4 +1,8 @@
 # Cheat table for PPSSPP
+## Included manual mode
+ Manual mode replaces aob script with an address entry which has to be changed to PSP memory base address, it'll work in any version even from before "Copy PSP memory base address" option was added, through in earlier versions this would have to be copied from the PPSSPP log console. I will still be updating AOB script whenever I notice it doesn't work, but as of now it works fine and it's generally rare to have to update it.
+ Manual mode "PSP memory in CE" expects PSP base address while AOB version points to PSP user memory, they will be different and that's normal, all the scripts are aware of that change.
+
 ## Updated on 1.16.6-346 (now fully, previous version I forgot about updating conversion script)
  x64 version required for AOB script, through there's an x86 version for 1.2.2 release under the legacy scripts.<br><br>
 
@@ -17,6 +21,7 @@
  - use "Attach to PPSSPP" or do it yourself via CE option,
  - make sure to run a game within PPSSPP,
  - use "PPSSPP scripts aob x64",
+ - if it doesn't work, you can activate "Manual mode" and copy PSP memory base address from PPSSPP and paste it into the address field of "PSP memory in CE(manual) - replace the address in here:" and continue using the scripts there,
  - use one of the "Limit Scan Range" settings,
  - search for variables normally,
  - never use CE assembly or any advanced CE functions for PSP games, it doesn't support MIPS arch,
